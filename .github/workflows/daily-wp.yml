@@ -1,0 +1,123 @@
+name: Update wallpapers
+
+on:
+  schedule:
+    - cron: "0 3,9,15,21 * * *" 
+  workflow_dispatch:     # Per avviare manualmente
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Delete Deployment Environment
+        uses: strumwolf/delete-deployment-environment@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: github-pages
+          onlyRemoveDeployments: true
+  del_runs:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 1
+          
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: 
+      - cleanup
+      - del_runs
+    steps:
+      - name: Checkout repository (con tutta la storia)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Scarica tutta la storia del repository
+
+      - name: Install dipendenze
+        run: |
+          sudo apt install imagemagick curl jq
+
+      - name: Scarica e processa
+        run: |
+          chmod +x scripts/*.sh
+          bash scripts/download-today.sh
+          bash scripts/download-today.sh --history 15
+          bash scripts/generate-gallery.sh
+
+      - name: Upload images to GitHub Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/upload-to-releases.sh
+          bash scripts/upload-to-releases.sh
+
+      - name: Send ntfy notification
+        if: always()
+        env:
+          NTFSH_URL: https://ntfy.sh/wafy80_bing-wallpapers
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$NTFSH_URL" ]; then
+            echo "NTFSH_URL secret not set, skipping notification"
+            exit 0
+          fi
+
+          TITLE="Wallpaper Update"
+          REPO="${{ github.repository }}"
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ "$JOB_STATUS" = "success" ]; then
+            curl -s \
+              -H "Title: $TITLE" \
+              -H "Priority: 3" \
+              -H "X-Tags: tada,white_check_mark" \
+              -H "X-Click: $RUN_URL" \
+              -d "✅ Wallpaper update completed successfully in $REPO" \
+              "$NTFSH_URL"
+          else
+            curl -s \
+              -H "Title: $TITLE" \
+              -H "Priority: 5" \
+              -H "X-Tags: warning,x" \
+              -H "X-Click: $RUN_URL" \
+              -d "❌ Wallpaper update failed in $REPO. Status: $JOB_STATUS" \
+              "$NTFSH_URL"
+          fi
+
+      - name: Configura Git e Push (solo HTML e manifest)
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+
+          git add docs/img/*.txt
+          git add docs/img/index.html
+          git add docs/img/thumbs/*.jpg
+          git add docs/img/releases-manifest.json
+          
+          # Committa il cambiamento
+          git commit -m "updated at: $(date)"
+
+          # Riscrivi la cronologia mantenendo solo l'ultimo commit per il deployment
+          git fetch origin
+          git checkout --orphan temp-branch  # Crea un nuovo branch senza cronologia
+          git add docs/img/*.txt
+          git add docs/img/index.html
+          git add docs/img/thumbs/*.jpg
+          git add docs/img/releases-manifest.json
+
+          git commit -m "updated at: $(date)"  # Crea un nuovo commit
+          git branch -D main                 # Elimina il branch main
+          git branch -m main                 # Rinomina temp-branch in main
+          
+          # Pusha forzando solo il nuovo commit
+          git push --force origin main
