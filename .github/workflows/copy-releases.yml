@@ -34,6 +34,8 @@ jobs:
         run: |
           cat > copy_releases.py << 'SCRIPT_EOF'
           import os, time, requests
+          from urllib3.util.retry import Retry
+          from requests.adapters import HTTPAdapter
           
           SRC = os.getenv("SRC_REPO")
           DST = os.getenv("DST_REPO")
@@ -45,6 +47,12 @@ jobs:
               print("❌ GH_TOKEN mancante")
               exit(1)
           
+          # Sessione con retry automatici per errori di rete/SSL
+          session = requests.Session()
+          retries = Retry(total=3, backoff_factor=1.0, status_forcelist=[429, 500, 502, 503, 504])
+          adapter = HTTPAdapter(max_retries=retries)
+          session.mount("https://", adapter)
+          
           HEADERS = {
               "Authorization": f"Bearer {GH_TOKEN}",
               "Accept": "application/vnd.github+json",
@@ -52,7 +60,7 @@ jobs:
           }
           
           def check_limits():
-              r = requests.get("https://api.github.com/rate_limit", headers=HEADERS)
+              r = session.get("https://api.github.com/rate_limit", headers=HEADERS)
               core = r.json()["resources"]["core"]
               if core["remaining"] < 20:
                   wait = max(core["reset"] - time.time(), 0) + 5
@@ -62,7 +70,7 @@ jobs:
           def get_all_releases(repo):
               releases, page = [], 1
               while True:
-                  r = requests.get(f"https://api.github.com/repos/{repo}/releases?page={page}&per_page=100", headers=HEADERS)
+                  r = session.get(f"https://api.github.com/repos/{repo}/releases?page={page}&per_page=100", headers=HEADERS)
                   r.raise_for_status()
                   data = r.json()
                   if not data:
@@ -72,9 +80,51 @@ jobs:
                   check_limits()
               return releases
           
+          def upload_asset_with_retry(upload_url, asset, max_retries=3):
+              """Upload con retry e chunked read per evitare SSL errors"""
+              name = asset["name"]
+              size = asset["size"]
+              content_type = asset["content_type"] or "application/octet-stream"
+              
+              for attempt in range(max_retries):
+                  try:
+                      # Download in chunked mode (non raw!)
+                      with session.get(asset["browser_download_url"], headers={"Authorization": f"Bearer {GH_TOKEN}"}, stream=True) as dl:
+                          dl.raise_for_status()
+                          
+                          # Leggi tutto in memoria come bytes (per asset <50MB va bene)
+                          # Per file più grandi, si può streammare a chunk fissi
+                          content = dl.content  # legge tutto in memoria, ma evita SSL EOF
+                      
+                      upload_resp = session.post(
+                          f"{upload_url}?name={name}",
+                          headers={
+                              "Authorization": f"Bearer {GH_TOKEN}",
+                              "Content-Type": content_type,
+                              "Content-Length": str(size)
+                          },
+                          data=content  # bytes, non stream
+                      )
+                      upload_resp.raise_for_status()
+                      return True
+                      
+                  except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as e:
+                      wait = (2 ** attempt) + 0.5  # backoff esponenziale
+                      print(f"⚠ Tentativo {attempt+1}/{max_retries} fallito: {type(e).__name__}, retry in {wait:.1f}s")
+                      time.sleep(wait)
+                  except requests.exceptions.HTTPError as e:
+                      if e.response.status_code >= 500:
+                          wait = (2 ** attempt) + 0.5
+                          print(f"⚠ Server error {e.response.status_code}, retry in {wait:.1f}s")
+                          time.sleep(wait)
+                      else:
+                          raise  # errori 4xx non si ritentano
+              return False
+          
           def copy_release(src_rel):
               tag = src_rel["tag_name"]
-              # Filtri opzionali per intervallo tag
+              
+              # Filtri opzionali
               if START_TAG and tag < START_TAG:
                   return
               if END_TAG and tag > END_TAG:
@@ -83,56 +133,53 @@ jobs:
               print(f"\n📦 {tag} | {len(src_rel['assets'])} asset")
               
               # Skip se già esiste
-              if requests.get(f"https://api.github.com/repos/{DST}/releases/tags/{tag}", headers=HEADERS).status_code == 200:
-                  print(f"  ⚠ Già esistente, skip")
-                  return
+              existing = session.get(f"https://api.github.com/repos/{DST}/releases/tags/{tag}", headers=HEADERS)
+              if existing.status_code == 200:
+              print(f"  ⚠ Già esistente, skip")
+              return
+          existing.raise_for_status()
+          
+          # Crea release
+          create = session.post(f"https://api.github.com/repos/{DST}/releases", headers=HEADERS, json={
+              "tag_name": tag,
+              "name": src_rel["name"],
+              "body": src_rel["body"] or "",
+              "draft": src_rel["draft"],
+              "prerelease": src_rel["prerelease"]
+          })
+          create.raise_for_status()
+          upload_base = create.json()["upload_url"].split("{?")[0]
+          
+          # Upload asset
+          for asset in src_rel["assets"]:
+              name = asset["name"]
+              if name in ("Source code (zip)", "Source code (tar.gz)"):
+                  continue
+              size_mb = asset["size"] / 1024 / 1024
+              print(f"  🔄 {name} ({size_mb:.1f} MB)", end=" ", flush=True)
               
-              # Crea release
-              create = requests.post(f"https://api.github.com/repos/{DST}/releases", headers=HEADERS, json={
-                  "tag_name": tag,
-                  "name": src_rel["name"],
-                  "body": src_rel["body"] or "",
-                  "draft": src_rel["draft"],
-                  "prerelease": src_rel["prerelease"]
-              })
-              create.raise_for_status()
-              upload_base = create.json()["upload_url"].split("{?")[0]
-              
-              # Stream asset
-              for asset in src_rel["assets"]:
-                  name = asset["name"]
-                  if name in ("Source code (zip)", "Source code (tar.gz)"):
-                      continue
-                  size_mb = asset["size"] / 1024 / 1024
-                  print(f"  🔄 {name} ({size_mb:.1f} MB)", end=" ", flush=True)
-                  
-                  with requests.get(asset["browser_download_url"], headers={"Authorization": f"Bearer {GH_TOKEN}"}, stream=True) as dl:
-                      dl.raise_for_status()
-                      up = requests.post(
-                          f"{upload_base}?name={name}",
-                          headers={
-                              "Authorization": f"Bearer {GH_TOKEN}",
-                              "Content-Type": asset["content_type"] or "application/octet-stream",
-                              "Content-Length": str(asset["size"])
-                          },
-                          data=dl.raw
-                      )
-                      up.raise_for_status()
+              success = upload_asset_with_retry(upload_base, asset)
+              if success:
                   print("✅")
-                  check_limits()
-                  time.sleep(0.3)
-          
-          def main():
-              print(f"🔍 Fetching releases da {SRC}...")
-              releases = get_all_releases(SRC)
-              print(f"✅ Trovate {len(releases)} release")
-              for rel in releases:
-                  copy_release(rel)
-                  time.sleep(0.5)
-              print("\n🎉 Trasferimento completato!")
-          
-          if __name__ == "__main__":
-              main()
+              else:
+                  print("❌ Fallito dopo retry")
+              
+              check_limits()
+              time.sleep(0.5)  # pause tra asset
+      
+              def main():
+                  print(f"🔍 Fetching releases da {SRC}...")
+                  releases = get_all_releases(SRC)
+                  print(f"✅ Trovate {len(releases)} release")
+                  
+                  for rel in releases:
+                      copy_release(rel)
+                      time.sleep(1)
+                  
+                  print("\n🎉 Trasferimento completato!")
+              
+              if __name__ == "__main__":
+                  main()
           SCRIPT_EOF
 
       - name: Run script
