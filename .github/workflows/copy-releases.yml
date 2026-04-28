@@ -1,0 +1,121 @@
+name: Copy Bing Wallpaper Releases
+on: workflow_dispatch
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install requests
+      - run: |
+          cat > copy.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Copia le release di Bing wallpapers da wafy80.github.io a bing-wallpaper
+con streaming diretto: nessun file salvato localmente.
+"""
+import os, time, requests
+from urllib.parse import urlparse
+
+# 🔑 Configurazione
+SRC = "wafy80/wafy80.github.io"
+DST = "wafy80/bing-wallpaper"
+GH_TOKEN = os.getenv("GH_TOKEN", "").strip()
+
+if not GH_TOKEN:
+    print("❌ Imposta GH_TOKEN: export GH_TOKEN='ghp_...'")
+    exit(1)
+
+HEADERS = {
+    "Authorization": f"Bearer {GH_TOKEN}",
+    "Accept": "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+}
+
+def check_limits():
+    """Controlla e gestisce i rate limit"""
+    r = requests.get("https://api.github.com/rate_limit", headers=HEADERS)
+    core = r.json()["resources"]["core"]
+    if core["remaining"] < 20:
+        wait = max(core["reset"] - time.time(), 0) + 5
+        print(f"⏳ Rate limit basso, attendo {wait:.0f}s...")
+        time.sleep(wait)
+
+def get_all_releases(repo):
+    """Recupera tutte le release (paginazione)"""
+    releases, page = [], 1
+    while True:
+        r = requests.get(f"https://api.github.com/repos/{repo}/releases?page={page}&per_page=100", headers=HEADERS)
+        r.raise_for_status()
+        data = r.json()
+        if not 
+            break
+        releases.extend(data)
+        page += 1
+        check_limits()
+    return releases
+
+def copy_release(src_rel):
+    tag = src_rel["tag_name"]
+    print(f"\n📦 {tag} | {len(src_rel['assets'])} asset")
+    
+    # Skip se già esiste
+    if requests.get(f"https://api.github.com/repos/{DST}/releases/tags/{tag}", headers=HEADERS).status_code == 200:
+        print(f"  ⚠ Già esistente, skip")
+        return
+    
+    # Crea release nel destination
+    create = requests.post(f"https://api.github.com/repos/{DST}/releases", headers=HEADERS, json={
+        "tag_name": tag,
+        "name": src_rel["name"],
+        "body": src_rel["body"] or "",
+        "draft": src_rel["draft"],
+        "prerelease": src_rel["prerelease"]
+    })
+    create.raise_for_status()
+    upload_base = create.json()["upload_url"].split("{?")[0]
+    
+    # Stream ogni asset
+    for asset in src_rel["assets"]:
+        name = asset["name"]
+        if name in ("Source code (zip)", "Source code (tar.gz)"):
+            continue
+        size_mb = asset["size"] / 1024 / 1024
+        print(f"  🔄 {name} ({size_mb:.1f} MB)", end=" ", flush=True)
+        
+        # Download stream → Upload stream
+        with requests.get(asset["browser_download_url"], headers={"Authorization": f"Bearer {GH_TOKEN}"}, stream=True) as dl:
+            dl.raise_for_status()
+            up = requests.post(
+                f"{upload_base}?name={name}",
+                headers={
+                    "Authorization": f"Bearer {GH_TOKEN}",
+                    "Content-Type": asset["content_type"] or "application/octet-stream",
+                    "Content-Length": str(asset["size"])
+                },
+                data=dl.raw
+            )
+            up.raise_for_status()
+        print("✅")
+        check_limits()
+        time.sleep(0.3)  # piccolo delay per non stressare l'API
+
+def main():
+    print(f"🔍 Fetching releases da {SRC}...")
+    releases = get_all_releases(SRC)
+    print(f"✅ Trovate {len(releases)} release")
+    
+    for rel in releases:
+        copy_release(rel)
+        time.sleep(0.5)
+    
+    print("\n🎉 Tutto trasferito!")
+
+if __name__ == "__main__":
+    main()
+          EOF
+          python3 copy.py
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
