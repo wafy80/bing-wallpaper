@@ -135,51 +135,51 @@ jobs:
               # Skip se già esiste
               existing = session.get(f"https://api.github.com/repos/{DST}/releases/tags/{tag}", headers=HEADERS)
               if existing.status_code == 200:
-              print(f"  ⚠ Già esistente, skip")
-              return
-          existing.raise_for_status()
-          
-          # Crea release
-          create = session.post(f"https://api.github.com/repos/{DST}/releases", headers=HEADERS, json={
-              "tag_name": tag,
-              "name": src_rel["name"],
-              "body": src_rel["body"] or "",
-              "draft": src_rel["draft"],
-              "prerelease": src_rel["prerelease"]
-          })
-          create.raise_for_status()
-          upload_base = create.json()["upload_url"].split("{?")[0]
-          
-          # Upload asset
-          for asset in src_rel["assets"]:
-              name = asset["name"]
-              if name in ("Source code (zip)", "Source code (tar.gz)"):
-                  continue
-              size_mb = asset["size"] / 1024 / 1024
-              print(f"  🔄 {name} ({size_mb:.1f} MB)", end=" ", flush=True)
+                  print(f"  ⚠ Già esistente, skip")
+                  return
+              existing.raise_for_status()
               
-              success = upload_asset_with_retry(upload_base, asset)
-              if success:
-                  print("✅")
-              else:
-                  print("❌ Fallito dopo retry")
+              # Crea release
+              create = session.post(f"https://api.github.com/repos/{DST}/releases", headers=HEADERS, json={
+                  "tag_name": tag,
+                  "name": src_rel["name"],
+                  "body": src_rel["body"] or "",
+                  "draft": src_rel["draft"],
+                  "prerelease": src_rel["prerelease"]
+              })
+              create.raise_for_status()
+              upload_base = create.json()["upload_url"].split("{?")[0]
               
-              check_limits()
-              time.sleep(0.5)  # pause tra asset
-      
-              def main():
-                  print(f"🔍 Fetching releases da {SRC}...")
-                  releases = get_all_releases(SRC)
-                  print(f"✅ Trovate {len(releases)} release")
+              # Upload asset
+              for asset in src_rel["assets"]:
+                  name = asset["name"]
+                  if name in ("Source code (zip)", "Source code (tar.gz)"):
+                      continue
+                  size_mb = asset["size"] / 1024 / 1024
+                  print(f"  🔄 {name} ({size_mb:.1f} MB)", end=" ", flush=True)
                   
-                  for rel in releases:
-                      copy_release(rel)
-                      time.sleep(1)
+                  success = upload_asset_with_retry(upload_base, asset)
+                  if success:
+                      print("✅")
+                  else:
+                      print("❌ Fallito dopo retry")
                   
-                  print("\n🎉 Trasferimento completato!")
+                  check_limits()
+                  time.sleep(0.5)  # pause tra asset
+          
+          def main():
+              print(f"🔍 Fetching releases da {SRC}...")
+              releases = get_all_releases(SRC)
+              print(f"✅ Trovate {len(releases)} release")
               
-              if __name__ == "__main__":
-                  main()
+              for rel in releases:
+                  copy_release(rel)
+                  time.sleep(1)
+              
+              print("\n🎉 Trasferimento completato!")
+          
+          if __name__ == "__main__":
+              main()
           SCRIPT_EOF
 
       - name: Run script
