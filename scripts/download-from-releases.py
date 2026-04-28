@@ -15,7 +15,7 @@ import urllib.error
 import ssl
 
 # Defaults
-DEFAULT_REPO = "wafy80/wafy80.github.io"
+DEFAULT_REPO = "wafy80/bing-wallpaper"
 DEFAULT_PREFIX = "wallpapers"
 DEFAULT_DIR = "docs/img"
 

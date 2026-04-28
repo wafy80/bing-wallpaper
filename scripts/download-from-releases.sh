@@ -22,7 +22,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 REPO_OWNER="wafy80"
-REPO_NAME="wafy80.github.io"
+REPO_NAME="bing-wallpaper"
 REPO="${REPO_OWNER}/${REPO_NAME}"
 
 MODE="auto"
@@ -37,7 +37,7 @@ OPTIONS:
     -m, --manifest    Use releases-manifest.json (default if exists)
     -a, --all         Download all releases (ignores manifest)
     -d, --dir PATH    Set destination directory (default: docs/img)
-    -r, --repo USER/REPO  Set GitHub repository (default: wafy80/wafy80.github.io)
+    -r, --repo USER/REPO  Set GitHub repository (default: wafy80/bing-wallpaper)
     -h, --help        Show this help message
 
 EXAMPLES:

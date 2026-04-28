@@ -21,7 +21,7 @@ LAST_UPDATED=$(date +"%d/%m/%Y, %H:%M")
 MONTH_NAMES=("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December")
 
 # Release configuration
-RELEASE_BASE_URL="https://github.com/wafy80/wafy80.github.io/releases/download/wallpapers-archive"
+RELEASE_BASE_URL="https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-archive"
 
 # Count metadata files (images may not be local, stored in Releases)
 TXT_COUNT=$(find "$WALLPAPER_DIR" -maxdepth 1 \( -name "bing_*.txt" -o -name "bing-*.txt" \) -type f 2>/dev/null | wc -l)
@@ -114,7 +114,7 @@ get_release_url() {
     fi
     
     # Fallback: costruisce URL mensile anche se non ancora nel manifest
-    echo "https://github.com/wafy80/wafy80.github.io/releases/download/${RELEASE_PREFIX}-${month_key}/${filename}"
+    echo "https://github.com/wafy80/bing-wallpaper/releases/download/${RELEASE_PREFIX}-${month_key}/${filename}"
 }
 
 # Create thumbnail directory

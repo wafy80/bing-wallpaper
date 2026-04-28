@@ -128,7 +128,7 @@ for month in "${SORTED_MONTHS[@]}"; do
             --notes "Daily Bing wallpapers for $month - auto updated" \
             --latest=false 2>/dev/null; then
             echo -e "${GREEN}   ✅ Release created${NC}"
-            RELEASE_URL="https://github.com/wafy80/wafy80.github.io/releases/download/$RELEASE_TAG"
+            RELEASE_URL="https://github.com/wafy80/bing-wallpaper/releases/download/$RELEASE_TAG"
         else
             echo -e "${RED}   ❌ Failed to create release${NC}"
             continue
@@ -271,7 +271,7 @@ cat > "$WALLPAPER_DIR/releases-manifest.json" << EOF
 {
   "version": 2,
   "release_prefix": "$RELEASE_PREFIX",
-  "base_url_pattern": "https://github.com/wafy80/wafy80.github.io/releases/download/{release_tag}/{filename}",
+  "base_url_pattern": "https://github.com/wafy80/bing-wallpaper/releases/download/{release_tag}/{filename}",
   "months": {
 EOF
 
@@ -295,7 +295,7 @@ for month in "${SORTED_MONTHS[@]}"; do
     cat >> "$WALLPAPER_DIR/releases-manifest.json" << EOF
     "$month": {
       "tag": "$RELEASE_TAG",
-      "url": "https://github.com/wafy80/wafy80.github.io/releases/download/$RELEASE_TAG",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/$RELEASE_TAG",
       "assets": $ASSET_COUNT
     }
 EOF
