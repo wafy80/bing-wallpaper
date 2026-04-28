@@ -75,16 +75,27 @@ echo "🌐 Markets: ${#MARKETS[@]} configured"
 echo ""
 
 # Extract wallpaper key from bing_url (e.g., "SeattleSunrise" from "OHR.SeattleSunrise_EN-US...")
+# or from "id=OHR.SeattleSunrise" parameter style)
 extract_key() {
     local url="$1"
     local basename
     basename=$(basename "$url")
-    # Pattern: OHR.KeyName_MARKET... (capture up to first underscore)
-    if [[ "$basename" =~ OHR\.([^_]+)_ ]]; then
+    # Pattern 1: OHR.KeyName_MARKET... (capture up to first underscore or non-word boundary)
+    if [[ "$basename" =~ OHR\.([^_]+) ]]; then
+        echo "${BASH_REMATCH[1]}"
+    # Pattern 2: id=OHR.KeyName parameter (capture key after OHR.)
+    elif [[ "$url" =~ id=OHR\.([^&]+) ]]; then
         echo "${BASH_REMATCH[1]}"
     else
-        echo "$url"
+        # No OHR key found
+        echo ""
     fi
+}
+
+# Generate safe alphanumeric string from title: only a-zA-Z0-9, max 100 chars
+slugify_title() {
+    local text="$1"
+    echo "$text" | sed -E 's/[^a-zA-Z0-9]+//g' | cut -c1-100
 }
 
 # Parse docs/img/index.html to find the oldest date currently in the gallery
@@ -128,11 +139,13 @@ download_from_archive() {
     local entry="$1"
     local market="$2"
 
-    local TITLE COPYRIGHT DATE BING_URL
+    local TITLE COPYRIGHT DATE BING_URL ORIGINAL_URL
     TITLE=$(echo "$entry" | jq -r '.title // .caption // .subtitle // "No title available"')
     COPYRIGHT=$(echo "$entry" | jq -r '.copyright // "© No copyright info available"')
-    DATE=$(echo "$entry" | jq -r '.date')  # YYYY-MM-DD
-    BING_URL=$(echo "$entry" | jq -r '.bing_url // ""')
+    DATE=$(echo "$entry" | jq -r '.date // ""')  # YYYY-MM-DD
+    # Prefer .bing_url, fallback to .url if bing_url is missing/null
+    BING_URL=$(echo "$entry" | jq -r '.bing_url // .url // ""')
+    ORIGINAL_URL=$(echo "$entry" | jq -r '.url // ""')
 
     if [ -z "$BING_URL" ] || [ "$BING_URL" = "null" ]; then
         echo "   ⚠️  No bing_url available for $DATE"
@@ -142,7 +155,20 @@ download_from_archive() {
     # Extract wallpaper key from bing_url
     local WALLPAPER_KEY
     WALLPAPER_KEY=$(extract_key "$BING_URL")
-    echo "   Key: $WALLPAPER_KEY"
+    if [ -z "$WALLPAPER_KEY" ]; then
+        # Fallback: use slugified title as unique key (same image = same title across markets)
+        local SLUG
+        SLUG=$(slugify_title "$TITLE")
+        if [ -z "$SLUG" ]; then
+            # Last resort: use date
+            WALLPAPER_KEY="${DATE//-/}"
+        else
+            WALLPAPER_KEY="$SLUG"
+        fi
+        echo "   ⚠️  No OHR key in URL, using fallback: $WALLPAPER_KEY"
+    else
+        echo "   Key: $WALLPAPER_KEY"
+    fi
 
     # Check if already downloaded
     if [ -n "${DOWNLOADED_KEYS[$WALLPAPER_KEY]+x}" ]; then
@@ -165,16 +191,23 @@ download_from_archive() {
         return 0
     fi
 
-    # Build image URLs - try UHD first, then original bing_url
-    local FULL_URL
-    FULL_URL="${BING_URL%_UHD.jpg}_UHD.jpg"  # Ensure UHD
-    # If bing_url doesn't have UHD suffix, try to add it
-    if [[ ! "$BING_URL" =~ UHD ]]; then
-        FULL_URL="${BING_URL%.jpg}_UHD.jpg"
+    # Build image URLs - different handling for Bing URLs vs direct archive URLs
+    local FULL_URL FALLBACK_URL
+    if [[ "$BING_URL" =~ OHR\. ]]; then
+        # Bing URL pattern: try UHD first, then original
+        FULL_URL="${BING_URL%_UHD.jpg}_UHD.jpg"
+        if [[ ! "$BING_URL" =~ UHD ]]; then
+            FULL_URL="${BING_URL%.jpg}_UHD.jpg"
+        else
+            FULL_URL="$BING_URL"
+        fi
+        FALLBACK_URL="$BING_URL"
     else
+        # Direct archive URL (e.g., https://bing.npanuhin.me/US/en/2023-12-31.jpg)
+        # Use as-is, no UHD transformation
         FULL_URL="$BING_URL"
+        FALLBACK_URL="$BING_URL"
     fi
-    local FALLBACK_URL="$BING_URL"
 
     echo "   📥 Download: $DATE"
     echo "      Title: $TITLE"
@@ -471,11 +504,25 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
     while IFS= read -r entry; do
         [ -z "$entry" ] && continue
         entry_date=$(echo "$entry" | jq -r '.date // ""')
-        bing_url=$(echo "$entry" | jq -r '.bing_url // ""')
         [ -z "$entry_date" ] || [ "$entry_date" = "null" ] && continue
-        [ -z "$bing_url" ] || [ "$bing_url" = "null" ] && continue
-        DATE_TO_KEY["$entry_date"]=$(extract_key "$bing_url")
-    done < <(echo "$ARCHIVE_JSON" | jq -c '.[] | select(.bing_url != null and .bing_url != "null")')
+
+        # Get bing_url and title for key generation
+        bing_url=$(echo "$entry" | jq -r '.bing_url // ""')
+        title=$(echo "$entry" | jq -r '.title // ""')
+
+        # Generate key: try bing_url OHR.key first, else slugify title, else date-only
+        if [ -n "$bing_url" ] && [ "$bing_url" != "null" ]; then
+            key=$(extract_key "$bing_url")
+        else
+            slug=$(slugify_title "$title")
+            if [ -z "$slug" ]; then
+                key="${entry_date//-/}"  # YYYYMMDD
+            else
+                key="$slug"
+            fi
+        fi
+        DATE_TO_KEY["$entry_date"]="$key"
+    done < <(echo "$ARCHIVE_JSON" | jq -c '.[] | select(.url != null)')
 
     # Step 5: Build the list of target dates (start_date → end_date)
     TARGET_DATES=()
@@ -533,13 +580,23 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
 
             TOTAL_PROCESSED=$((TOTAL_PROCESSED + 1))
 
-            bing_url=$(echo "$entry" | jq -r '.bing_url // ""')
-            if [ -z "$bing_url" ] || [ "$bing_url" = "null" ]; then
-                MARKET_SKIPPED=$((MARKET_SKIPPED + 1))
-                continue
-            fi
+            # Extract fields (same order/priority as download_from_archive)
+            entry_title=$(echo "$entry" | jq -r '.title // .caption // .subtitle // ""')
+            entry_date=$(echo "$entry" | jq -r '.date // ""')
+            [ -z "$entry_date" ] && continue
 
-            entry_key=$(extract_key "$bing_url")
+            # Generate entry key: try bing_url OHR key first, else slugify title
+            entry_bing_url=$(echo "$entry" | jq -r '.bing_url // ""')
+            if [ -n "$entry_bing_url" ] && [ "$entry_bing_url" != "null" ]; then
+                entry_key=$(extract_key "$entry_bing_url")
+            else
+                slug=$(slugify_title "$entry_title")
+                if [ -z "$slug" ]; then
+                    entry_key="${entry_date//-/}"
+                else
+                    entry_key="$slug"
+                fi
+            fi
 
             if [ -n "${DOWNLOADED_KEYS[$entry_key]+x}" ] || [ -n "${EXISTING_KEYS[$entry_key]+x}" ]; then
                 MARKET_SKIPPED=$((MARKET_SKIPPED + 1))
@@ -557,7 +614,7 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
             elif [ $local_result -eq 2 ]; then
                 MARKET_SKIPPED=$((MARKET_SKIPPED + 1))
             fi
-        done < <(echo "$MARKET_JSON" | jq -c "[.[] | select(.bing_url != null and .bing_url != \"null\" and ($jq_dates))] | reverse | .[]")
+        done < <(echo "$MARKET_JSON" | jq -c "[.[] | select(.url != null and .url != \"null\" and ($jq_dates))] | reverse | .[]")
 
         echo "   📊 Market $market: $MARKET_DOWNLOADED downloaded, $MARKET_SKIPPED skipped"
         echo ""
