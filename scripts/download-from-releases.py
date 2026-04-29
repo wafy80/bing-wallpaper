@@ -45,6 +45,14 @@ def parse_args():
     return parser.parse_args()
 
 
+def get_auth_headers():
+    headers = {"User-Agent": "BingWallpaper-Downloader"}
+    token = os.getenv("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"token {token}"
+    return headers
+
+
 def download_file(url, output_path):
     if os.path.exists(output_path):
         print(f"  [SKIP] {os.path.basename(output_path)} (exists)")
@@ -54,7 +62,7 @@ def download_file(url, output_path):
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         req = urllib.request.Request(
-            url, headers={"User-Agent": "BingWallpaper-Downloader"}
+            url, headers=get_auth_headers()
         )
         with urllib.request.urlopen(req, context=ctx, timeout=30) as response:
             with open(output_path, "wb") as f:
