@@ -72,7 +72,7 @@ def fetch_json(url):
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         req = urllib.request.Request(
-            url, headers={"User-Agent": "BingWallpaper-Downloader"}
+            url, headers=get_auth_headers()
         )
         with urllib.request.urlopen(req, context=ctx, timeout=30) as response:
             return json.loads(response.read().decode("utf-8"))
@@ -127,7 +127,7 @@ def download_from_manifest(dest_dir, repo, delay=0.5):
 
 def download_all(dest_dir, repo, delay=0.5):
     print(f"Fetching releases from {repo}...")
-    url = f"https://api.github.com/repos/{repo}/releases"
+    url = f"https://api.github.com/repos/{repo}/releases?per_page=100"
     data = fetch_json(url)
     if not data:
         print("No releases found")
@@ -151,11 +151,15 @@ def download_all(dest_dir, repo, delay=0.5):
 def main():
     args = parse_args()
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    dest_dir = (
-        os.path.abspath(args.dir)
-        if os.path.isabs(args.dir)
-        else os.path.join(script_dir, args.dir)
-    )
+    # Se l'utente non specifica -d, usa la directory docs/ nella root del progetto
+    if args.dir == DEFAULT_DIR:
+        dest_dir = os.path.abspath(os.path.join(script_dir, "..", "docs"))
+    else:
+        dest_dir = (
+            os.path.abspath(args.dir)
+            if os.path.isabs(args.dir)
+            else os.path.join(script_dir, args.dir)
+        )
 
     print("=" * 50)
     print("Bing Wallpaper - Download from GitHub Releases")
