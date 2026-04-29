@@ -2,7 +2,7 @@ name: Update wallpapers
 
 on:
   schedule:
-    - cron: "0 3,9,15,21 * * *" 
+    - cron: "0 3,7,11,15,19,23 * * *" 
   workflow_dispatch:     # Per avviare manualmente
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
         run: |
           chmod +x scripts/*.sh
           bash scripts/download-today.sh
-          bash scripts/download-today.sh --history 15
+          bash scripts/download-today.sh --history 30
           bash scripts/generate-gallery.sh
 
       - name: Upload images to GitHub Releases
