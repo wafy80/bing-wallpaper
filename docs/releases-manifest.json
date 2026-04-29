@@ -1,0 +1,205 @@
+{
+  "version": 2,
+  "release_prefix": "wallpapers",
+  "base_url_pattern": "https://github.com/wafy80/bing-wallpaper/releases/download/{release_tag}/{filename}",
+  "months": {
+    "2023-08": {
+      "tag": "wallpapers-2023-08",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2023-08",
+      "assets": 6
+    }
+,
+    "2023-09": {
+      "tag": "wallpapers-2023-09",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2023-09",
+      "assets": 30
+    }
+,
+    "2023-10": {
+      "tag": "wallpapers-2023-10",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2023-10",
+      "assets": 0
+    }
+,
+    "2023-11": {
+      "tag": "wallpapers-2023-11",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2023-11",
+      "assets": 0
+    }
+,
+    "2023-12": {
+      "tag": "wallpapers-2023-12",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2023-12",
+      "assets": 0
+    }
+,
+    "2024-01": {
+      "tag": "wallpapers-2024-01",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-01",
+      "assets": 0
+    }
+,
+    "2024-02": {
+      "tag": "wallpapers-2024-02",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-02",
+      "assets": 0
+    }
+,
+    "2024-03": {
+      "tag": "wallpapers-2024-03",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-03",
+      "assets": 0
+    }
+,
+    "2024-04": {
+      "tag": "wallpapers-2024-04",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-04",
+      "assets": 0
+    }
+,
+    "2024-05": {
+      "tag": "wallpapers-2024-05",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-05",
+      "assets": 0
+    }
+,
+    "2024-06": {
+      "tag": "wallpapers-2024-06",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-06",
+      "assets": 0
+    }
+,
+    "2024-07": {
+      "tag": "wallpapers-2024-07",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-07",
+      "assets": 0
+    }
+,
+    "2024-08": {
+      "tag": "wallpapers-2024-08",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-08",
+      "assets": 0
+    }
+,
+    "2024-09": {
+      "tag": "wallpapers-2024-09",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-09",
+      "assets": 0
+    }
+,
+    "2024-10": {
+      "tag": "wallpapers-2024-10",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-10",
+      "assets": 0
+    }
+,
+    "2024-11": {
+      "tag": "wallpapers-2024-11",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-11",
+      "assets": 0
+    }
+,
+    "2024-12": {
+      "tag": "wallpapers-2024-12",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2024-12",
+      "assets": 0
+    }
+,
+    "2025-01": {
+      "tag": "wallpapers-2025-01",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-01",
+      "assets": 0
+    }
+,
+    "2025-02": {
+      "tag": "wallpapers-2025-02",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-02",
+      "assets": 0
+    }
+,
+    "2025-03": {
+      "tag": "wallpapers-2025-03",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-03",
+      "assets": 0
+    }
+,
+    "2025-04": {
+      "tag": "wallpapers-2025-04",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-04",
+      "assets": 0
+    }
+,
+    "2025-05": {
+      "tag": "wallpapers-2025-05",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-05",
+      "assets": 0
+    }
+,
+    "2025-06": {
+      "tag": "wallpapers-2025-06",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-06",
+      "assets": 0
+    }
+,
+    "2025-07": {
+      "tag": "wallpapers-2025-07",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-07",
+      "assets": 0
+    }
+,
+    "2025-08": {
+      "tag": "wallpapers-2025-08",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-08",
+      "assets": 0
+    }
+,
+    "2025-09": {
+      "tag": "wallpapers-2025-09",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-09",
+      "assets": 0
+    }
+,
+    "2025-10": {
+      "tag": "wallpapers-2025-10",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-10",
+      "assets": 0
+    }
+,
+    "2025-11": {
+      "tag": "wallpapers-2025-11",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-11",
+      "assets": 0
+    }
+,
+    "2025-12": {
+      "tag": "wallpapers-2025-12",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2025-12",
+      "assets": 0
+    }
+,
+    "2026-01": {
+      "tag": "wallpapers-2026-01",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2026-01",
+      "assets": 0
+    }
+,
+    "2026-02": {
+      "tag": "wallpapers-2026-02",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2026-02",
+      "assets": 0
+    }
+,
+    "2026-03": {
+      "tag": "wallpapers-2026-03",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2026-03",
+      "assets": 0
+    }
+,
+    "2026-04": {
+      "tag": "wallpapers-2026-04",
+      "url": "https://github.com/wafy80/bing-wallpaper/releases/download/wallpapers-2026-04",
+      "assets": 0
+    }
+
+  }
+}
