@@ -6,6 +6,7 @@ Build executable: pip install pyinstaller && pyinstaller --onefile download-from
 """
 
 import os
+import re
 import sys
 import argparse
 import json
@@ -51,6 +52,42 @@ def get_auth_headers():
     if token:
         headers["Authorization"] = f"token {token}"
     return headers
+
+
+def extract_assets_from_html(html_path):
+    """Estrae tutti gli URL completi degli asset dal file index.html."""
+    with open(html_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    # Cerca tutti gli attributi data-full
+    urls = re.findall(r'data-full="([^"]+)"', content)
+    assets = []
+    for url in urls:
+        # Filtra solo file immagine comuni
+        if any(url.lower().endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".webp")):
+            filename = url.split("/")[-1]
+            assets.append((filename, url))
+    return assets
+
+
+def download_from_html(dest_dir, repo, delay=0.5):
+    html_path = os.path.join(dest_dir, "index.html")
+    if not os.path.exists(html_path):
+        print(f"HTML not found: {html_path}")
+        return
+    assets = extract_assets_from_html(html_path)
+    print(f"Found {len(assets)} wallpapers in HTML")
+    os.makedirs(dest_dir, exist_ok=True)
+    total_downloaded = total_skipped = 0
+    for filename, url in assets:
+        output_path = os.path.join(dest_dir, filename)
+        if os.path.exists(output_path):
+            total_skipped += 1
+            print(f"  [SKIP] {filename}")
+        else:
+            if download_file(url, output_path):
+                total_downloaded += 1
+        time.sleep(delay)
+    print(f"\n=== Total: {total_downloaded} downloaded, {total_skipped} skipped ===")
 
 
 def download_file(url, output_path):
@@ -175,14 +212,20 @@ def main():
     print(f"Destination: {dest_dir}")
     print(f"Repository: {args.repo}")
     print()
+    
+    download_file("https://wafy80.github.io/bing-wallpaper/releases-manifest.json", os.path.join(dest_dir, "releases-manifest.json"))
+    download_file("https://wafy80.github.io/bing-wallpaper/index.html", os.path.join(dest_dir, "index.html"))
 
     manifest_exists = os.path.exists(os.path.join(dest_dir, "releases-manifest.json"))
+    html_exists = os.path.exists(os.path.join(dest_dir, "index.html"))
     delay = args.delay
 
     if args.all:
         download_all(dest_dir, args.repo, delay)
     elif manifest_exists:
         download_from_manifest(dest_dir, args.repo, delay)
+    elif html_exists:
+        download_from_html(dest_dir, args.repo, delay)
     else:
         download_all(dest_dir, args.repo, delay)
 
