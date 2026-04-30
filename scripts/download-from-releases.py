@@ -215,9 +215,6 @@ def main():
     print(f"Destination: {dest_dir}")
     print(f"Repository: {args.repo}")
     print()
-    
-    download_file("https://wafy80.github.io/bing-wallpaper/releases-manifest.json", os.path.join(dest_dir, "releases-manifest.json"), force=True)
-    download_file("https://wafy80.github.io/bing-wallpaper/index.html", os.path.join(dest_dir, "index.html"), force=True)
 
     manifest_exists = os.path.exists(os.path.join(dest_dir, "releases-manifest.json"))
     html_exists = os.path.exists(os.path.join(dest_dir, "index.html"))
@@ -226,8 +223,10 @@ def main():
     if args.all:
         download_all(dest_dir, args.repo, delay)
     elif html_exists:
+        download_file("https://wafy80.github.io/bing-wallpaper/index.html", os.path.join(dest_dir, "index.html"), force=True)
         download_from_html(dest_dir, args.repo, delay)
     elif manifest_exists:
+        download_file("https://wafy80.github.io/bing-wallpaper/releases-manifest.json", os.path.join(dest_dir, "releases-manifest.json"), force=True)
         download_from_manifest(dest_dir, args.repo, delay)
     else:
         download_all(dest_dir, args.repo, delay)
