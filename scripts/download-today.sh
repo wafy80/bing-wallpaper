@@ -43,24 +43,49 @@ FILENAME_FORMAT="${FILENAME_FORMAT:-}"
 [ -z "$FILENAME_FORMAT" ] && FILENAME_FORMAT='bing-{date}.jpg'
 ARCHIVE_LANG="${ARCHIVE_LANG:-US/en}"
 
-# Markets in priority order
-MARKETS=("en-US" "en-GB" "en-CA" "en-AU" "en-IN" "it-IT" "es-ES" "pt-BR" "fr-FR" "fr-CA" "de-DE" "ja-JP" "zh-CN")
+# Markets in priority order - focused on those that typically provide distinct wallpapers
+MARKETS=(
+    "en-US"    # United States - often unique
+    "en-GB"    # United Kingdom - often unique
+    "en-CA"    # Canada English - often unique
+    "fr-CA"    # Canada French - often unique
+    "es-ES"    # Spain - often unique
+    "fr-FR"    # France - often unique
+    "de-DE"    # Germany - often unique
+    "it-IT"    # Italy - often unique
+    "ja-JP"    # Japan - often unique (different image)
+    "zh-CN"    # China - often unique
+    "pt-BR"    # Brazil - often unique
+    "en-IN"    # India - often unique
+    # Additional markets that sometimes have regional variants
+    "en-AU"    # Australia
+    "es-MX"    # Mexico
+    "pt-PT"    # Portugal
+    "nl-NL"    # Netherlands
+    "ru-RU"    # Russia
+    "ko-KR"    # Korea
+)
 
 # Market display names
 declare -A MARKET_NAMES
 MARKET_NAMES["en-US"]="United States"
 MARKET_NAMES["en-GB"]="United Kingdom"
 MARKET_NAMES["en-CA"]="Canada (EN)"
-MARKET_NAMES["en-AU"]="Australia"
-MARKET_NAMES["en-IN"]="India"
-MARKET_NAMES["it-IT"]="Italy"
-MARKET_NAMES["es-ES"]="Spain"
-MARKET_NAMES["pt-BR"]="Brazil"
-MARKET_NAMES["fr-FR"]="France"
 MARKET_NAMES["fr-CA"]="Canada (FR)"
+MARKET_NAMES["es-ES"]="Spain"
+MARKET_NAMES["fr-FR"]="France"
 MARKET_NAMES["de-DE"]="Germany"
+MARKET_NAMES["it-IT"]="Italy"
 MARKET_NAMES["ja-JP"]="Japan"
 MARKET_NAMES["zh-CN"]="China"
+MARKET_NAMES["pt-BR"]="Brazil"
+MARKET_NAMES["en-IN"]="India"
+MARKET_NAMES["en-AU"]="Australia"
+MARKET_NAMES["es-MX"]="Mexico"
+MARKET_NAMES["pt-PT"]="Portugal"
+MARKET_NAMES["nl-NL"]="Netherlands"
+MARKET_NAMES["ru-RU"]="Russia"
+MARKET_NAMES["ko-KR"]="Korea"
 
 # Create folder if it doesn't exist
 mkdir -p "$WALLPAPER_DIR"
