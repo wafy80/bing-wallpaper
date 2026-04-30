@@ -807,16 +807,19 @@ cat >> "$OUTPUT" << 'HTMLMID2'
         let months = [];
 
         const MARKET_NAMES = {
-            'en-US': 'United States', 'en-GB': 'United Kingdom', 'en-CA': 'Canada (EN)',
-            'en-AU': 'Australia', 'en-IN': 'India', 'it-IT': 'Italy', 'es-ES': 'Spain',
-            'pt-BR': 'Brazil', 'fr-FR': 'France', 'fr-CA': 'Canada (FR)',
-            'de-DE': 'Germany', 'ja-JP': 'Japan', 'zh-CN': 'China'
+            'en-US': 'United States', 'en-GB': 'United Kingdom', 'en-CA': 'Canada',
+            'fr-CA': 'Canada', 'es-ES': 'Spain', 'fr-FR': 'France',
+            'de-DE': 'Germany', 'it-IT': 'Italy', 'ja-JP': 'Japan', 'zh-CN': 'China',
+            'pt-BR': 'Brazil', 'pt-PT': 'Portugal', 'en-IN': 'India', 'en-AU': 'Australia',
+            'es-MX': 'Mexico', 'nl-NL': 'Netherlands', 'ru-RU': 'Russia', 'ko-KR': 'Korea'
         };
 
         const MARKET_FLAGS = {
-            'en-US': '🇺🇸', 'en-GB': '🇬🇧', 'en-CA': '🇨🇦', 'en-AU': '🇦🇺',
-            'en-IN': '🇮🇳', 'it-IT': '🇮🇹', 'es-ES': '🇪🇸', 'pt-BR': '🇧🇷',
-            'fr-FR': '🇫🇷', 'fr-CA': '🇨🇦', 'de-DE': '🇩🇪', 'ja-JP': '🇯🇵', 'zh-CN': '🇨🇳'
+            'en-US': '🇺🇸', 'en-GB': '🇬🇧', 'en-CA': '🇨🇦', 'fr-CA': '🇨🇦',
+            'es-ES': '🇪🇸', 'fr-FR': '🇫🇷', 'de-DE': '🇩🇪', 'it-IT': '🇮🇹',
+            'ja-JP': '🇯🇵', 'zh-CN': '🇨🇳', 'pt-BR': '🇧🇷', 'pt-PT': '🇵🇹',
+            'en-IN': '🇮🇳', 'en-AU': '🇦🇺', 'es-MX': '🇲🇽', 'nl-NL': '🇳🇱',
+            'ru-RU': '🇷🇺', 'ko-KR': '🇰🇷'
         };
 HTMLMID2
 
@@ -900,27 +903,36 @@ cat >> "$OUTPUT" << 'HTMLFOOT'
         function buildMarketFilter() {
             const select = document.getElementById('marketFilter');
 
-            // Extract unique markets from cards
-            const marketSet = new Set();
+            // Group markets by display name
+            const marketGroups = new Map();
             allCards.forEach(card => {
-                if (card.dataset.market && card.dataset.market !== 'Unknown') {
-                    marketSet.add(card.dataset.market);
+                const marketCode = card.dataset.market;
+                if (marketCode && marketCode !== 'Unknown') {
+                    const displayName = MARKET_NAMES[marketCode] || marketCode;
+                    if (!marketGroups.has(displayName)) {
+                        marketGroups.set(displayName, []);
+                    }
+                    marketGroups.get(displayName).push(marketCode);
                 }
             });
 
-            const sortedMarkets = Array.from(marketSet).sort();
-            sortedMarkets.forEach(market => {
+            // Sort display names alphabetically
+            const sortedDisplayNames = Array.from(marketGroups.keys()).sort();
+
+            sortedDisplayNames.forEach(displayName => {
                 const option = document.createElement('option');
-                option.value = market;
-                const flag = MARKET_FLAGS[market] || '🌐';
-                option.textContent = `${flag} ${MARKET_NAMES[market] || market}`;
+                // Get the first market code for flag/name lookup (they should all have same flag/name)
+                const firstMarketCode = marketGroups.get(displayName)[0];
+                const flag = MARKET_FLAGS[firstMarketCode] || '🌐';
+                option.value = displayName; // Use display name as value
+                option.textContent = `${flag} ${displayName}`;
                 select.appendChild(option);
             });
         }
 
         function filterGallery() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const market = document.getElementById('marketFilter').value;
+            const marketDisplayName = document.getElementById('marketFilter').value;
             let visible = 0;
 
             allCards.forEach(card => {
@@ -928,19 +940,20 @@ cat >> "$OUTPUT" << 'HTMLFOOT'
                 const copyright = card.dataset.copyright.toLowerCase();
                 const date = card.dataset.date.toLowerCase();
                 const cardMonth = card.dataset.month;
-                const cardMarket = card.dataset.market;
+                const cardMarketCode = card.dataset.market;
 
                 // Check month filter
                 const monthMatch = currentMonth === 'all' || cardMonth === currentMonth;
 
-                // Check market filter
-                const marketMatch = market === 'all' || cardMarket === market;
+                // Check market filter - map display name back to market codes
+                const marketMatch = marketDisplayName === 'all' || 
+                    (cardMarketCode && MARKET_NAMES[cardMarketCode] === marketDisplayName);
 
                 // Check search query
                 const searchMatch = !query.trim() ||
-                                   title.includes(query) ||
-                                   copyright.includes(query) ||
-                                   date.includes(query);
+                                    title.includes(query) ||
+                                    copyright.includes(query) ||
+                                    date.includes(query);
 
                 if (monthMatch && marketMatch && searchMatch) {
                     card.style.display = 'block';
@@ -959,7 +972,7 @@ cat >> "$OUTPUT" << 'HTMLFOOT'
             }
 
             // Update counter
-            const marketLabel = market === 'all' ? '' : ` in ${market}`;
+            const marketLabel = marketDisplayName === 'all' ? '' : ` in ${marketDisplayName}`;
             const monthLabel = currentMonth === 'all' ? '' : ` (${currentMonth})`;
             document.getElementById('resultsCount').textContent =
                 `Showing ${visible} of ${allCards.length} images${marketLabel}${monthLabel}`;
