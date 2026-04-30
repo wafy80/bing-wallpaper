@@ -493,14 +493,28 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
 
     echo "� Oldest date in gallery: $OLDEST_DATE"
 
-    # Step 2: Calculate the date range: N days BEFORE the oldest date
-    # start_date = oldest_date - DAYS_COUNT
-    # end_date   = oldest_date - 1 day
-    start_date=$(date -d "$OLDEST_DATE - $DAYS_COUNT days" +%Y-%m-%d 2>/dev/null || date -v-${DAYS_COUNT}d -j -f "%Y-%m-%d" "$OLDEST_DATE" +%Y-%m-%d 2>/dev/null)
-    end_date=$(date -d "$OLDEST_DATE - 1 day" +%Y-%m-%d 2>/dev/null || date -v-1d -j -f "%Y-%m-%d" "$OLDEST_DATE" +%Y-%m-%d 2>/dev/null)
+     # Step 2: Calculate the date range: N days BEFORE the oldest date
+     # start_date = oldest_date - DAYS_COUNT
+     # end_date   = oldest_date - 1 day
+     start_date=$(date -d "$OLDEST_DATE - $DAYS_COUNT days" +%Y-%m-%d 2>/dev/null || date -v-${DAYS_COUNT}d -j -f "%Y-%m-%d" "$OLDEST_DATE" +%Y-%m-%d 2>/dev/null)
+     end_date=$(date -d "$OLDEST_DATE - 1 day" +%Y-%m-%d 2>/dev/null || date -v-1d -j -f "%Y-%m-%d" "$OLDEST_DATE" +%Y-%m-%d 2>/dev/null)
 
-    echo "📡 Downloading archive: $start_date → $end_date"
-    echo ""
+     # Clip dates to available archive (from 2010-01-01)
+     MIN_DATE="2010-01-01"
+     if [[ "$end_date" < "$MIN_DATE" ]]; then
+         echo "⚠️  Requested dates are before $MIN_DATE, no data available."
+         echo "✅ Done: 0 downloaded, 0 skipped, 0 errors"
+         echo "========================================="
+         exit 0
+     fi
+
+     if [[ "$start_date" < "$MIN_DATE" ]]; then
+         echo "📅 Adjusting start date to $MIN_DATE (archive available from this date)"
+         start_date="$MIN_DATE"
+     fi
+
+     echo "📡 Downloading archive: $start_date → $end_date"
+     echo ""
 
     # Step 3: Collect all keys already downloaded
     declare -A EXISTING_KEYS
@@ -579,8 +593,24 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
         jq_dates+=".date == \"$d\""
     done
 
+     # Check if we're downloading dates before 2024-01-01
+     # If so, only use en-US market as others weren't available before 01/01/2024
+     # But first check if dates are before archive start (2010-01-01)
+     if [[ "$end_date" < "2010-01-01" ]]; then
+         echo "⚠️  Requested dates are before 2010-01-01, no data available in archive."
+         echo "✅ Done: 0 downloaded, 0 skipped, 0 errors"
+         echo "========================================="
+         exit 0
+     fi
+
+     if [[ "$end_date" < "2024-01-01" ]]; then
+         MARKETS_TO_USE=("en-US")
+     else
+         MARKETS_TO_USE=("${MARKETS[@]}")
+     fi
+
     # Step 6: For each market, fetch the archive and download target dates
-    for market in "${MARKETS[@]}"; do
+    for market in "${MARKETS_TO_USE[@]}"; do
         market_name="${MARKET_NAMES[$market]:-$market}"
 
         echo "🔍 Checking archive: $market ($market_name)"
