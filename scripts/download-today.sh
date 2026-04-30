@@ -123,6 +123,36 @@ slugify_title() {
     echo "$text" | sed -E 's/[^a-zA-Z0-9]+//g' | cut -c1-100
 }
 
+# Generate enhanced title for slugification: original title + first word of caption + first word of subtitle
+enhance_title_for_slug() {
+    local json_entry="$1"
+    local TITLE CAPTION SUBTITLE
+    
+    TITLE=$(echo "$json_entry" | jq -r '.title // ""')
+    CAPTION=$(echo "$json_entry" | jq -r '.caption // ""')
+    SUBTITLE=$(echo "$json_entry" | jq -r '.subtitle // ""')
+    
+    local ENHANCED="$TITLE"
+    
+    # Add first word of caption if it exists and is not empty
+    if [ -n "$CAPTION" ]; then
+        local FIRST_WORD_CAPTION=$(echo "$CAPTION" | awk '{print $1}')
+        if [ -n "$FIRST_WORD_CAPTION" ]; then
+            ENHANCED="$ENHANCED $FIRST_WORD_CAPTION"
+        fi
+    fi
+    
+    # Add first word of subtitle if it exists and is not empty
+    if [ -n "$SUBTITLE" ]; then
+        local FIRST_WORD_SUBTITLE=$(echo "$SUBTITLE" | awk '{print $1}')
+        if [ -n "$FIRST_WORD_SUBTITLE" ]; then
+            ENHANCED="$ENHANCED $FIRST_WORD_SUBTITLE"
+        fi
+    fi
+    
+    echo "$ENHANCED"
+}
+
 # Parse docs/index.html to find the oldest date currently in the gallery
 # Returns date in YYYY-MM-DD format (index.html uses DD/MM/YYYY)
 find_oldest_date() {
@@ -181,9 +211,9 @@ download_from_archive() {
     local WALLPAPER_KEY
     WALLPAPER_KEY=$(extract_key "$BING_URL")
     if [ -z "$WALLPAPER_KEY" ]; then
-        # Fallback: use slugified title as unique key (same image = same title across markets)
+        # Fallback: use slugified enhanced title as unique key (same image = same title across markets)
         local SLUG
-        SLUG=$(slugify_title "$TITLE")
+        SLUG=$(slugify_title "$(enhance_title_for_slug "$entry")")
         if [ -z "$SLUG" ]; then
             # Last resort: use date
             WALLPAPER_KEY="${DATE//-/}"
@@ -553,7 +583,7 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
         if [ -n "$bing_url" ] && [ "$bing_url" != "null" ]; then
             key=$(extract_key "$bing_url")
         else
-            slug=$(slugify_title "$title")
+            slug=$(slugify_title "$(enhance_title_for_slug "$entry")")
             if [ -z "$slug" ]; then
                 key="${entry_date//-/}"  # YYYYMMDD
             else
@@ -645,7 +675,7 @@ if [ "$DAYS_COUNT" -gt 1 ]; then
             if [ -n "$entry_bing_url" ] && [ "$entry_bing_url" != "null" ]; then
                 entry_key=$(extract_key "$entry_bing_url")
             else
-                slug=$(slugify_title "$entry_title")
+                slug=$(slugify_title "$(enhance_title_for_slug "$entry")")
                 if [ -z "$slug" ]; then
                     entry_key="${entry_date//-/}"
                 else
