@@ -77,21 +77,24 @@ def download_from_html(dest_dir, repo, delay=0.5):
     assets = extract_assets_from_html(html_path)
     print(f"Found {len(assets)} wallpapers in HTML")
     os.makedirs(dest_dir, exist_ok=True)
-    total_downloaded = total_skipped = 0
-    for filename, url in assets:
+    total_downloaded = total_skipped = total_failed = 0
+    for i, (filename, url) in enumerate(assets, start=1):
         output_path = os.path.join(dest_dir, filename)
+        # print(f"Processing {i}: {url}")
         if os.path.exists(output_path):
             total_skipped += 1
             print(f"  [SKIP] {filename}")
         else:
             if download_file(url, output_path):
                 total_downloaded += 1
-        time.sleep(delay)
-    print(f"\n=== Total: {total_downloaded} downloaded, {total_skipped} skipped ===")
+                time.sleep(delay)
+            else:
+                total_failed += 1
+    print(f"\n=== Total: {total_downloaded} downloaded, {total_skipped} skipped, {total_failed} failed ===")
 
 
-def download_file(url, output_path):
-    if os.path.exists(output_path):
+def download_file(url, output_path, force=False):
+    if os.path.exists(output_path) and not force:
         print(f"  [SKIP] {os.path.basename(output_path)} (exists)")
         return True
     try:
@@ -213,8 +216,8 @@ def main():
     print(f"Repository: {args.repo}")
     print()
     
-    download_file("https://wafy80.github.io/bing-wallpaper/releases-manifest.json", os.path.join(dest_dir, "releases-manifest.json"))
-    download_file("https://wafy80.github.io/bing-wallpaper/index.html", os.path.join(dest_dir, "index.html"))
+    download_file("https://wafy80.github.io/bing-wallpaper/releases-manifest.json", os.path.join(dest_dir, "releases-manifest.json"), force=True)
+    download_file("https://wafy80.github.io/bing-wallpaper/index.html", os.path.join(dest_dir, "index.html"), force=True)
 
     manifest_exists = os.path.exists(os.path.join(dest_dir, "releases-manifest.json"))
     html_exists = os.path.exists(os.path.join(dest_dir, "index.html"))
@@ -222,10 +225,10 @@ def main():
 
     if args.all:
         download_all(dest_dir, args.repo, delay)
-    elif manifest_exists:
-        download_from_manifest(dest_dir, args.repo, delay)
     elif html_exists:
         download_from_html(dest_dir, args.repo, delay)
+    elif manifest_exists:
+        download_from_manifest(dest_dir, args.repo, delay)
     else:
         download_all(dest_dir, args.repo, delay)
 
