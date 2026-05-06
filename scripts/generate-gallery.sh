@@ -633,90 +633,162 @@ cat > "$OUTPUT" << 'HTMLHEAD'
             .month-breadcrumb { font-size: 12px; padding: 8px 12px; }
         }
 
-        /* Monthly Breadcrumb Navigation */
-        .month-navigation {
+        /* ── Accordion Navigation ───────────────────────────────────────── */
+        .accordion-nav {
             max-width: 1400px;
-            margin: 20px auto 30px;
-            background: var(--card-bg);
+            margin: 0 auto 30px;
+        }
+
+        /* Year level */
+        .year-section {
+            margin-bottom: 12px;
             border-radius: 12px;
-            padding: 15px 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
         }
 
-        .month-navigation h3 {
-            margin: 0 0 12px 0;
-            color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .month-breadcrumbs {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .month-breadcrumb {
-            padding: 10px 18px;
-            background: var(--bg);
-            color: var(--text);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .month-breadcrumb:hover {
-            background: var(--primary);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,120,212,0.3);
-        }
-
-        .month-breadcrumb.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary-dark);
-            box-shadow: 0 4px 12px rgba(0,120,212,0.3);
-        }
-
-        .month-breadcrumb .month-count {
-            font-size: 12px;
-            opacity: 0.85;
-            margin-left: 4px;
-        }
-
-        .month-section {
-            margin-bottom: 40px;
-        }
-
-        .month-section-header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        .year-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0,120,212,0.3);
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.25s ease;
         }
 
-        .month-section-header h2 {
+        .year-header:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #004080);
+        }
+
+        .year-header h2 {
             margin: 0;
-            font-size: 1.5em;
+            font-size: 1.35em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
-        .month-section-header .month-count {
-            font-size: 0.9em;
-            opacity: 0.9;
+        .year-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .year-count {
+            font-size: 0.88em;
+            opacity: 0.85;
+            background: rgba(255,255,255,0.15);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .accordion-chevron {
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .year-section.open > .year-header .accordion-chevron,
+        .month-section.open > .month-header .accordion-chevron {
+            transform: rotate(180deg);
+        }
+
+        .year-body {
+            background: var(--card-bg);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .year-section.open > .year-body {
+            /* 20000px is intentionally large (max-height CSS transition trick):
+               the browser animates 0→N where N must exceed actual content height.
+               Closing (N→0) is smooth; opening feels instant, which is the desired UX. */
+            max-height: 20000px;
+            transition: max-height 0.6s ease;
+        }
+
+        .year-body-inner {
+            padding: 16px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Month level */
+        .month-section {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            user-select: none;
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+        }
+
+        .month-header:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .month-section.open > .month-header {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        .month-header h3 {
+            margin: 0;
+            font-size: 1.05em;
+            font-weight: 600;
+        }
+
+        .month-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .month-count-badge {
+            font-size: 0.82em;
+            opacity: 0.85;
+        }
+
+        .month-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .month-section.open > .month-body {
+            max-height: 10000px;
+            transition: max-height 0.5s ease;
+        }
+
+        /* Image grid inside month */
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            padding: 20px;
+            background: rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 768px) {
+            .month-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; padding: 12px; }
+            .year-header h2 { font-size: 1.1em; }
+            .year-header { padding: 14px 16px; }
         }
     </style>
 </head>
@@ -742,8 +814,7 @@ cat >> "$OUTPUT" << HTMLMID
         </select>
         <input type="text" class="search-box" id="searchInput" placeholder="Search by title, copyright, or date..." onkeyup="filterGallery()">
         <button class="search-btn" onclick="filterGallery()">🔍 Search</button>
-        <button class="filter-btn" onclick="resetFilter()">🔄 Show All</button>
-        <button class="filter-btn" onclick="document.getElementById('footer').scrollIntoView({behavior:'smooth'})">📅 Month list</button>
+        <button class="filter-btn" onclick="expandAll()">🔄 Show All</button>
     </div>
 
     <div class="gallery-info">
@@ -756,18 +827,18 @@ cat >> "$OUTPUT" << HTMLMID
         <p>Try modifying your search terms</p>
     </div>
 
-    <div class="gallery" id="gallery">
+    <!-- Hidden card pool — JS reads data-* from here, then moves cards into accordion -->
+    <div id="cardPool" style="display:none;">
 HTMLMID
 
 # Generate cards by month
 generate_cards_by_month >> "$OUTPUT"
 
 cat >> "$OUTPUT" << 'HTMLMID2'
-    </div>
+    </div><!-- end #cardPool -->
 
-    <!-- Monthly Breadcrumb Navigation -->
-    <div class="month-navigation" id="monthNavigation">
-    </div>
+    <!-- Three-level accordion: Year > Month > Images -->
+    <div class="accordion-nav" id="accordionNav"></div>
 
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox">
@@ -801,10 +872,8 @@ cat >> "$OUTPUT" << 'HTMLMID2'
 
     <script>
         let currentImageIndex = 0;
-        let images = [];
-        let allCards = [];
-        let currentMonth = 'all';
-        let months = [];
+        let allCards = [];      // all card elements (from pool)
+        let visibleCards = [];  // cards currently shown (after filter)
 
         const MARKET_NAMES = {
             'en-US': 'United States', 'en-GB': 'United Kingdom', 'en-CA': 'Canada',
@@ -825,173 +894,232 @@ HTMLMID2
 
 cat >> "$OUTPUT" << 'HTMLFOOT'
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            allCards = Array.from(document.querySelectorAll('.card'));
-            images = allCards.map(card => card.querySelector('img'));
-            
-            // Extract unique months from cards
-            const monthSet = new Set();
-            allCards.forEach(card => {
-                if (card.dataset.month) {
-                    monthSet.add(card.dataset.month);
-                }
-            });
-            months = Array.from(monthSet).sort().reverse(); // Newest first
+        // ── Month name helper ──────────────────────────────────────────────
+        const MONTH_NAMES_JS = ['January','February','March','April','May','June',
+                                'July','August','September','October','November','December'];
 
-            buildMonthNavigation();
+        // ── Initialize ─────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            // Collect cards from the hidden pool
+            allCards = Array.from(document.querySelectorAll('#cardPool .card'));
+
             buildMarketFilter();
-            
-            // Auto-select current month
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonthNum = String(now.getMonth() + 1).padStart(2, '0');
-            const currentMonthKey = `${currentYear}-${currentMonthNum}`;
-            
-            // Select current month if it exists, otherwise select the newest available month
-            if (months.includes(currentMonthKey)) {
-                selectMonth(currentMonthKey);
-            } else if (months.length > 0) {
-                selectMonth(months[0]); // Select newest month
-            } else {
-                filterGallery();
+            buildAccordion();
+
+            // Re-index allCards from the rendered accordion so lightbox navigation
+            // order matches the visual Year→Month→Image order exactly.
+            allCards = Array.from(document.querySelectorAll('#accordionNav .card'));
+
+            // Auto-open the most recent year and its most recent month
+            const firstYear = document.querySelector('.year-section');
+            if (firstYear) {
+                openSection(firstYear);
+                const firstMonth = firstYear.querySelector('.month-section');
+                if (firstMonth) openSection(firstMonth);
             }
+
+            filterGallery();
         });
 
-        function buildMonthNavigation() {
-            const navContainer = document.getElementById('monthNavigation');
-            
-            let html = '<h3>📅 Browse by Month</h3><div class="month-breadcrumbs">';
-            
-            // "All" button
-            html += `<button class="month-breadcrumb active" onclick="selectMonth('all')">All Images<span class="month-count">(${allCards.length})</span></button>`;
-            
-            // Month buttons
-            months.forEach(month => {
-                const [year, monthNum] = month.split('-');
-                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                                   'July', 'August', 'September', 'October', 'November', 'December'];
-                const monthName = monthNames[parseInt(monthNum) - 1];
-                const count = allCards.filter(card => card.dataset.month === month).length;
-                
-                html += `<button class="month-breadcrumb" data-month="${month}" onclick="selectMonth('${month}')">${monthName} ${year}<span class="month-count">(${count})</span></button>`;
+        // ── Build accordion ────────────────────────────────────────────────
+        function buildAccordion() {
+            // Group cards by year → month (sorted newest first)
+            const yearMap = new Map(); // year -> Map(month -> [cards])
+            allCards.forEach(card => {
+                const m = card.dataset.month || 'unknown-00';
+                const [year, monthNum] = m.split('-');
+                if (!yearMap.has(year)) yearMap.set(year, new Map());
+                if (!yearMap.get(year).has(m)) yearMap.get(year).set(m, []);
+                yearMap.get(year).get(m).push(card);
             });
-            
-            html += '</div>';
-            navContainer.innerHTML = html;
+
+            // Sort years newest first
+            const sortedYears = Array.from(yearMap.keys()).sort().reverse();
+            const nav = document.getElementById('accordionNav');
+            nav.innerHTML = '';
+
+            sortedYears.forEach(year => {
+                const monthMap = yearMap.get(year);
+                const sortedMonths = Array.from(monthMap.keys()).sort().reverse();
+                const yearCount = sortedMonths.reduce((s, m) => s + monthMap.get(m).length, 0);
+
+                // Year section
+                const yearSection = document.createElement('div');
+                yearSection.className = 'year-section';
+                yearSection.dataset.year = year;
+
+                // Year header
+                const yearHeader = document.createElement('div');
+                yearHeader.className = 'year-header';
+                yearHeader.innerHTML = `
+                    <h2>📅 ${year}</h2>
+                    <div class="year-header-right">
+                        <span class="year-count" data-year-count="${year}">${yearCount} images</span>
+                        <span class="accordion-chevron">▼</span>
+                    </div>`;
+                yearHeader.addEventListener('click', () => toggleSection(yearSection));
+
+                // Year body
+                const yearBody = document.createElement('div');
+                yearBody.className = 'year-body';
+                const yearBodyInner = document.createElement('div');
+                yearBodyInner.className = 'year-body-inner';
+
+                sortedMonths.forEach(monthKey => {
+                    const cards = monthMap.get(monthKey);
+                    const [, monthNum] = monthKey.split('-');
+                    const monthName = MONTH_NAMES_JS[parseInt(monthNum, 10) - 1] || monthKey;
+
+                    // Month section
+                    const monthSection = document.createElement('div');
+                    monthSection.className = 'month-section';
+                    monthSection.dataset.month = monthKey;
+
+                    // Month header
+                    const monthHeader = document.createElement('div');
+                    monthHeader.className = 'month-header';
+                    monthHeader.innerHTML = `
+                        <h3>${monthName} ${year}</h3>
+                        <div class="month-header-right">
+                            <span class="month-count-badge" data-month-count="${monthKey}">${cards.length} images</span>
+                            <span class="accordion-chevron">▼</span>
+                        </div>`;
+                    monthHeader.addEventListener('click', () => toggleSection(monthSection));
+
+                    // Month body + grid
+                    const monthBody = document.createElement('div');
+                    monthBody.className = 'month-body';
+                    const grid = document.createElement('div');
+                    grid.className = 'month-grid';
+                    grid.dataset.monthGrid = monthKey;
+
+                    // Move cards into grid
+                    cards.forEach(card => {
+                        card.style.display = '';
+                        grid.appendChild(card);
+                    });
+
+                    monthBody.appendChild(grid);
+                    monthSection.appendChild(monthHeader);
+                    monthSection.appendChild(monthBody);
+                    yearBodyInner.appendChild(monthSection);
+                });
+
+                yearBody.appendChild(yearBodyInner);
+                yearSection.appendChild(yearHeader);
+                yearSection.appendChild(yearBody);
+                nav.appendChild(yearSection);
+            });
         }
 
-        function selectMonth(month) {
-            currentMonth = month;
-            
-            // Update active state
-            document.querySelectorAll('.month-breadcrumb').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            if (month === 'all') {
-                document.querySelector('.month-breadcrumb').classList.add('active');
-            } else {
-                document.querySelector(`.month-breadcrumb[data-month="${month}"]`).classList.add('active');
-            }
-            
-            filterGallery();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        // ── Accordion toggle helpers ───────────────────────────────────────
+        function openSection(el) {
+            el.classList.add('open');
         }
 
+        function closeSection(el) {
+            el.classList.remove('open');
+        }
 
+        function toggleSection(el) {
+            el.classList.toggle('open');
+        }
+
+        // ── Market filter builder ──────────────────────────────────────────
         function buildMarketFilter() {
             const select = document.getElementById('marketFilter');
 
-            // Group markets by display name
             const marketGroups = new Map();
             allCards.forEach(card => {
                 const marketCode = card.dataset.market;
                 if (marketCode && marketCode !== 'Unknown') {
                     const displayName = MARKET_NAMES[marketCode] || marketCode;
-                    if (!marketGroups.has(displayName)) {
-                        marketGroups.set(displayName, []);
-                    }
+                    if (!marketGroups.has(displayName)) marketGroups.set(displayName, []);
                     marketGroups.get(displayName).push(marketCode);
                 }
             });
 
-            // Sort display names alphabetically
-            const sortedDisplayNames = Array.from(marketGroups.keys()).sort();
-
-            sortedDisplayNames.forEach(displayName => {
+            Array.from(marketGroups.keys()).sort().forEach(displayName => {
                 const option = document.createElement('option');
-                // Get the first market code for flag/name lookup (they should all have same flag/name)
-                const firstMarketCode = marketGroups.get(displayName)[0];
-                const flag = MARKET_FLAGS[firstMarketCode] || '🌐';
-                option.value = displayName; // Use display name as value
+                const firstCode = marketGroups.get(displayName)[0];
+                const flag = MARKET_FLAGS[firstCode] || '🌐';
+                option.value = displayName;
                 option.textContent = `${flag} ${displayName}`;
                 select.appendChild(option);
             });
         }
 
+        // ── Filter across all cards ────────────────────────────────────────
         function filterGallery() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const marketDisplayName = document.getElementById('marketFilter').value;
             let visible = 0;
 
             allCards.forEach(card => {
-                const title = card.dataset.title.toLowerCase();
-                const copyright = card.dataset.copyright.toLowerCase();
-                const date = card.dataset.date.toLowerCase();
-                const cardMonth = card.dataset.month;
+                const title = (card.dataset.title || '').toLowerCase();
+                const copyright = (card.dataset.copyright || '').toLowerCase();
+                const date = (card.dataset.date || '').toLowerCase();
                 const cardMarketCode = card.dataset.market;
 
-                // Check month filter
-                const monthMatch = currentMonth === 'all' || cardMonth === currentMonth;
-
-                // Check market filter - map display name back to market codes
-                const marketMatch = marketDisplayName === 'all' || 
+                const marketMatch = marketDisplayName === 'all' ||
                     (cardMarketCode && MARKET_NAMES[cardMarketCode] === marketDisplayName);
 
-                // Check search query
-                const searchMatch = !query.trim() ||
-                                    title.includes(query) ||
-                                    copyright.includes(query) ||
-                                    date.includes(query);
+                const searchMatch = !query ||
+                    title.includes(query) ||
+                    copyright.includes(query) ||
+                    date.includes(query);
 
-                if (monthMatch && marketMatch && searchMatch) {
-                    card.style.display = 'block';
-                    visible++;
-                } else {
-                    card.style.display = 'none';
-                }
+                const show = marketMatch && searchMatch;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
             });
 
-            // Show/hide no results message
-            const noResults = document.getElementById('noResults');
-            if (visible === 0) {
-                noResults.classList.add('show');
-            } else {
-                noResults.classList.remove('show');
-            }
+            // Update per-month and per-year counts
+            document.querySelectorAll('.month-section').forEach(ms => {
+                const monthKey = ms.dataset.month;
+                const grid = ms.querySelector('.month-grid');
+                if (!grid) return;
+                const cnt = Array.from(grid.querySelectorAll('.card')).filter(c => c.style.display !== 'none').length;
+                const badge = document.querySelector(`[data-month-count="${monthKey}"]`);
+                if (badge) badge.textContent = `${cnt} image${cnt !== 1 ? 's' : ''}`;
+            });
 
-            // Update counter
+            document.querySelectorAll('.year-section').forEach(ys => {
+                const yr = ys.dataset.year;
+                const cnt = Array.from(ys.querySelectorAll('.card')).filter(c => c.style.display !== 'none').length;
+                const badge = document.querySelector(`[data-year-count="${yr}"]`);
+                if (badge) badge.textContent = `${cnt} image${cnt !== 1 ? 's' : ''}`;
+            });
+
+            // Show/hide no-results banner
+            const noResults = document.getElementById('noResults');
+            noResults.classList.toggle('show', visible === 0);
+
+            // Update results counter
             const marketLabel = marketDisplayName === 'all' ? '' : ` in ${marketDisplayName}`;
-            const monthLabel = currentMonth === 'all' ? '' : ` (${currentMonth})`;
             document.getElementById('resultsCount').textContent =
-                `Showing ${visible} of ${allCards.length} images${marketLabel}${monthLabel}`;
+                `Showing ${visible} of ${allCards.length} images${marketLabel}`;
         }
 
-        function resetFilter() {
+        function expandAll() {
+            // Clear all filters
             document.getElementById('searchInput').value = '';
             document.getElementById('marketFilter').value = 'all';
-            selectMonth('all');
+            filterGallery();
+            // Expand every year and month section
+            document.querySelectorAll('.year-section, .month-section').forEach(openSection);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function openLightboxFromCard(imgElement) {
             const card = imgElement.closest('.card');
-            const fullSrc = card.dataset.full;
-            const title = card.dataset.title;
-            const copyright = card.dataset.copyright;
-            const date = card.dataset.date;
-            const market = card.dataset.market;
-            openLightbox(fullSrc, title, copyright, date, market);
+            openLightbox(
+                card.dataset.full,
+                card.dataset.title,
+                card.dataset.copyright,
+                card.dataset.date,
+                card.dataset.market
+            );
         }
 
         function openLightbox(src, title, copyright, date, market) {
@@ -1011,18 +1139,10 @@ cat >> "$OUTPUT" << 'HTMLFOOT'
             }
             document.getElementById('downloadBtn').href = src;
 
-            // Find the card that was clicked using full URL
-            const visibleCards = allCards.filter(card => card.style.display !== 'none');
-            let clickedIndex = 0;
-            
-            visibleCards.forEach((c, idx) => {
-                if (c.dataset.full === src) {
-                    clickedIndex = idx;
-                }
-            });
-
-            currentImageIndex = clickedIndex;
-            images = visibleCards;
+            // Build ordered visible card list from the DOM (preserves year→month→image order)
+            visibleCards = allCards.filter(c => c.style.display !== 'none');
+            currentImageIndex = visibleCards.findIndex(c => c.dataset.full === src);
+            if (currentImageIndex < 0) currentImageIndex = 0;
 
             lightbox.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1034,14 +1154,12 @@ cat >> "$OUTPUT" << 'HTMLFOOT'
         }
 
         function navigateLightbox(direction) {
-            const visibleCards = allCards.filter(card => card.style.display !== 'none');
+            visibleCards = allCards.filter(c => c.style.display !== 'none');
             currentImageIndex += direction;
             if (currentImageIndex < 0) currentImageIndex = visibleCards.length - 1;
             if (currentImageIndex >= visibleCards.length) currentImageIndex = 0;
 
             const card = visibleCards[currentImageIndex];
-            const img = card.querySelector('img');
-
             openLightbox(
                 card.dataset.full,
                 card.dataset.title,
