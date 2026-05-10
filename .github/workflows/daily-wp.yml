@@ -51,7 +51,7 @@ jobs:
         run: |
           chmod +x scripts/*.sh
           bash scripts/download-today.sh
-          bash scripts/download-today.sh --history 30
+          bash scripts/download-today.sh --history 100
           bash scripts/generate-gallery.sh
 
       - name: Upload images to GitHub Releases
