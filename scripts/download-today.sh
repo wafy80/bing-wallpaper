@@ -45,25 +45,19 @@ ARCHIVE_LANG="${ARCHIVE_LANG:-US/en}"
 
 # Markets in priority order - focused on those that typically provide distinct wallpapers
 MARKETS=(
-    "en-US"    # United States - often unique
-    "en-GB"    # United Kingdom - often unique
-    "en-CA"    # Canada English - often unique
-    "fr-CA"    # Canada French - often unique
-    "es-ES"    # Spain - often unique
-    "fr-FR"    # France - often unique
-    "de-DE"    # Germany - often unique
-    "it-IT"    # Italy - often unique
-    "ja-JP"    # Japan - often unique (different image)
-    "zh-CN"    # China - often unique
-    "pt-BR"    # Brazil - often unique
-    "en-IN"    # India - often unique
-    # Additional markets that sometimes have regional variants
+    "en-US"    # United States
+    "en-GB"    # United Kingdom
+    "en-CA"    # Canada English
     "en-AU"    # Australia
-    "es-MX"    # Mexico
-    "pt-PT"    # Portugal
-    "nl-NL"    # Netherlands
-    "ru-RU"    # Russia
-    "ko-KR"    # Korea
+    "en-IN"    # India
+    "it-IT"    # Italy
+    "es-ES"    # Spain
+    "fr-FR"    # France
+    "fr-CA"    # Canada French
+    "pt-BR"    # Brazil
+    "de-DE"    # Germany
+    "ja-JP"    # Japan
+    "zh-CN"    # China
 )
 
 # Market display names
@@ -81,11 +75,6 @@ MARKET_NAMES["zh-CN"]="China"
 MARKET_NAMES["pt-BR"]="Brazil"
 MARKET_NAMES["en-IN"]="India"
 MARKET_NAMES["en-AU"]="Australia"
-MARKET_NAMES["es-MX"]="Mexico"
-MARKET_NAMES["pt-PT"]="Portugal"
-MARKET_NAMES["nl-NL"]="Netherlands"
-MARKET_NAMES["ru-RU"]="Russia"
-MARKET_NAMES["ko-KR"]="Korea"
 
 # Create folder if it doesn't exist
 mkdir -p "$WALLPAPER_DIR"
