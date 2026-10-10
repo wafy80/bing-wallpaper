@@ -1,0 +1,52 @@
+# =============================================================================
+# Bing Wallpaper Manager - Configuration
+# =============================================================================
+# Copy this file to config.conf and customize the values.
+# =============================================================================
+
+# Folder where images are saved (absolute path)
+# Use / for Linux/macOS, C:/ for Windows (with Git Bash/WSL)
+WALLPAPER_DIR="$HOME/Pictures/BingWallpapers"
+
+# Language/market for Bing content
+# Examples: en-US, en-GB, en-CA, en-AU, it-IT, fr-FR, de-DE, ja-JP
+# Note: en-US has the largest archive (~6000 images)
+BING_MARKET="en-US"
+
+# Historical archive (npanuhin/Bing-Wallpaper-Archive)
+# Available: US-en, ROW-en (Rest of World), IT-it, and others
+# ROW-en is more international but may have fewer images
+ARCHIVE_BASE="https://bing.npanuhin.me"
+ARCHIVE_LANG="ROW-en"
+
+# Download limits (to avoid rate limiting)
+BATCH_SIZE=30           # Images per sync run
+DOWNLOAD_DELAY=2        # Seconds between downloads
+
+# Filename format
+# Available variables: {date}, {hash}, {title}
+FILENAME_FORMAT="bing-{date}-{hash}.jpg"
+
+# Metadata: save .txt file next to each image?
+SAVE_METADATA=true
+
+# HTML gallery: generate automatically?
+GENERATE_GALLERY=true
+
+# Desktop notifications: enable notifications when notify-send is available
+ENABLE_NOTIFICATIONS=true
+
+# =============================================================================
+# Multi-Market Sync Configuration (sync-multi-market.sh)
+# =============================================================================
+
+# Daily markets to download from (space-separated list)
+# Each market may have different daily wallpapers
+DAILY_MARKETS="en-US en-GB en-CA en-AU it-IT fr-FR de-DE es-ES ja-JP zh-CN"
+
+# Archive markets to sync from (space-separated list)
+# ROW-en = Rest of World (more international content)
+ARCHIVE_MARKETS="US-en ROW-en IT-it FR-fr DE-de ES-es JA-jp"
+
+# Batch size for archive sync (images per market per run)
+MULTI_BATCH_SIZE=50
